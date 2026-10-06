@@ -6,6 +6,7 @@ local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local Lighting = game:GetService("Lighting")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
 local savedPositions = {
@@ -16,7 +17,7 @@ local espObjects = {}
 local playerEspObjects = {}
 local selectedLocation = "Vị trí 1"
 local moveMethod = "Teleport"
-local travelSpeed = 165 
+local travelSpeed = 100 
 local instantInteractEnabled = false
 local espEnabled = true
 local playerEspEnabled = true
@@ -64,7 +65,7 @@ ToggleCorner.Parent = ToggleButton
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
-MainFrame.Size = UDim2.new(0, 240, 0, 260)
+MainFrame.Size = UDim2.new(0, 240, 0, 300)
 MainFrame.Position = UDim2.new(0.02, 0, 0.26, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 MainFrame.BackgroundTransparency = 0.35
@@ -85,9 +86,9 @@ TitleLabel.Parent = MainFrame
 TitleLabel.Size = UDim2.new(1, -50, 0, 22)
 TitleLabel.Position = UDim2.new(0, 8, 0, 2)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "√12kientomato Mini (Anti-Player)"
+TitleLabel.Text = "√12kientomato Mini (10m Anti-Reset)"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
-TitleLabel.TextSize = 12
+TitleLabel.TextSize = 11
 TitleLabel.Font = Enum.Font.SourceSansBold
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -172,8 +173,8 @@ TpBtn.Position = UDim2.new(0, 8, 0, 56)
 TpBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
 TpBtn.BackgroundTransparency = 0.1
 TpBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-TpBtn.Text = "🚀 BAY / TELEPORT NÉ ĐÒN"
-TpBtn.TextSize = 12
+TpBtn.Text = "🚀 BAY NÉ 10M / TELEPORT"
+TpBtn.TextSize = 11
 TpBtn.Font = Enum.Font.SourceSansBold
 
 local TpCorner = Instance.new("UICorner")
@@ -251,10 +252,56 @@ PlayerEspBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+local SliderLabel = Instance.new("TextLabel")
+SliderLabel.Parent = MainFrame
+SliderLabel.Size = UDim2.new(1, -16, 0, 14)
+SliderLabel.Position = UDim2.new(0, 8, 0, 150)
+SliderLabel.BackgroundTransparency = 1
+SliderLabel.Text = "Tốc độ Tween: 100"
+SliderLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+SliderLabel.TextSize = 10
+SliderLabel.Font = Enum.Font.SourceSans
+
+local SliderBar = Instance.new("Frame")
+SliderBar.Parent = MainFrame
+SliderBar.Size = UDim2.new(1, -16, 0, 8)
+SliderBar.Position = UDim2.new(0, 8, 0, 166)
+SliderBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+
+local SliderFill = Instance.new("Frame")
+SliderFill.Parent = SliderBar
+SliderFill.Size = UDim2.new(0.5, 0, 1, 0)
+SliderFill.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+
+local dragging = false
+SliderBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+    end
+end)
+SliderBar.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local mousePos = input.Position.X
+        local barPos = SliderBar.AbsolutePosition.X
+        local barSize = SliderBar.AbsoluteSize.X
+        local percentage = math.clamp((mousePos - barPos) / barSize, 0, 1)
+        
+        SliderFill.Size = UDim2.new(percentage, 0, 1, 0)
+        travelSpeed = math.floor(20 + percentage * (165 - 20))
+        SliderLabel.Text = "Tốc độ Tween: " .. tostring(travelSpeed)
+    end
+end)
+
 local InstantEBtn = Instance.new("TextButton")
 InstantEBtn.Parent = MainFrame
 InstantEBtn.Size = UDim2.new(0, 110, 0, 22)
-InstantEBtn.Position = UDim2.new(0, 8, 0, 154)
+InstantEBtn.Position = UDim2.new(0, 8, 0, 180)
 InstantEBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 InstantEBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 InstantEBtn.Text = "Bấm 'E' Nhanh: Tắt"
@@ -273,7 +320,7 @@ end)
 local HopBtn = Instance.new("TextButton")
 HopBtn.Parent = MainFrame
 HopBtn.Size = UDim2.new(0, 110, 0, 22)
-HopBtn.Position = UDim2.new(0, 122, 0, 154)
+HopBtn.Position = UDim2.new(0, 122, 0, 180)
 HopBtn.BackgroundColor3 = Color3.fromRGB(80, 50, 120)
 HopBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 HopBtn.Text = "🌐 Chuyển Server"
@@ -287,7 +334,7 @@ HopCorner.Parent = HopBtn
 local FixLagBtn = Instance.new("TextButton")
 FixLagBtn.Parent = MainFrame
 FixLagBtn.Size = UDim2.new(1, -16, 0, 26)
-FixLagBtn.Position = UDim2.new(0, 8, 0, 184)
+FixLagBtn.Position = UDim2.new(0, 8, 0, 210)
 FixLagBtn.BackgroundColor3 = Color3.fromRGB(180, 100, 0)
 FixLagBtn.BackgroundTransparency = 0.1
 FixLagBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -559,8 +606,8 @@ TpBtn.MouseButton1Click:Connect(function()
     elseif moveMethod == "Tween" then
         local targetPos = targetCFrame.Position
         
-        -- Bay vút lên cao 55m so với mục tiêu
-        local highTargetPos = Vector3.new(targetPos.X, targetPos.Y + 55, targetPos.Z)
+        -- Bay lên độ cao 10m để né đòn an toàn tuyệt đối không bị reset
+        local highTargetPos = Vector3.new(targetPos.X, targetPos.Y + 10, targetPos.Z)
         local distanceHigh = (hrp.Position - highTargetPos).Magnitude
         local durationHigh = distanceHigh / travelSpeed
         
@@ -568,27 +615,27 @@ TpBtn.MouseButton1Click:Connect(function()
         tweenHigh:Play()
         tweenHigh.Completed:Wait()
         
-        -- Lạng lách trái/phải 20m mỗi 3.5 giây trên không
+        -- Lạng lách trái/phải 15m mỗi 3 giây trên không
         local dodging = true
         local sideToggle = 1
         
         task.spawn(function()
             while dodging do
-                task.wait(3.5)
+                task.wait(3.0)
                 if not dodging then break end
                 sideToggle = sideToggle * -1
                 
                 local currentHrp = character:FindFirstChild("HumanoidRootPart")
                 if currentHrp then
                     local rightVec = currentHrp.CFrame.RightVector
-                    local dodgeTarget = Vector3.new(targetPos.X, targetPos.Y + 55, targetPos.Z) + (rightVec * (20 * sideToggle))
-                    local dodgeTween = TweenService:Create(currentHrp, TweenInfo.new(1.2, Enum.EasingStyle.Sine), {CFrame = CFrame.new(dodgeTarget, targetPos)})
+                    local dodgeTarget = Vector3.new(targetPos.X, targetPos.Y + 10, targetPos.Z) + (rightVec * (15 * sideToggle))
+                    local dodgeTween = TweenService:Create(currentHrp, TweenInfo.new(1.0, Enum.EasingStyle.Sine), {CFrame = CFrame.new(dodgeTarget, targetPos)})
                     dodgeTween:Play()
                 end
             end
         end)
         
-        -- Hạ cánh an toàn xuống vị trí đích với tốc độ 165
+        -- Hạ cánh chính xác vào vị trí đích
         local finalDistance = (hrp.Position - targetPos).Magnitude
         local finalDuration = finalDistance / travelSpeed
         local tweenFinal = TweenService:Create(hrp, TweenInfo.new(finalDuration, Enum.EasingStyle.Linear), {CFrame = targetCFrame})
